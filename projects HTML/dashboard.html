@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeatherSphere - User Weather Dashboard</title>
+  <link rel="stylesheet" href="weather.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Leaflet CSS for Map Visuals -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+</head>
+<body>
+
+  <!-- Navigation Bar (Flexbox) -->
+  <header class="navbar">
+    <a href="dashboard.html" class="nav-brand">
+      <div class="brand-icon">
+        <i class="fas fa-cloud-sun-rain"></i>
+      </div>
+      <span>WeatherSphere</span>
+      <span class="brand-tag">User Module</span>
+    </a>
+
+    <div class="nav-actions">
+      <!-- Unit Toggle (Flexbox) -->
+      <div class="unit-toggle">
+        <button class="unit-btn active" data-unit="C" onclick="setUnit('C')">°C</button>
+        <button class="unit-btn" data-unit="F" onclick="setUnit('F')">°F</button>
+      </div>
+
+      <!-- Admin Portal Shortcut (visible for admin role) -->
+      <a href="admin.html" id="adminPortalLink" class="btn btn-secondary btn-sm" style="display: none;">
+        <i class="fas fa-shield-alt" style="color: #f87171;"></i> Admin Panel
+      </a>
+
+      <!-- Current User Profile Pill -->
+      <div class="user-badge">
+        <div class="user-avatar" id="userInitial">U</div>
+        <span id="navUserName" style="font-weight: 600;">Student User</span>
+        <span id="navUserRole" class="role-pill user">USER</span>
+      </div>
+
+      <!-- Logout Button -->
+      <button class="btn btn-secondary btn-sm" onclick="Auth.logout()" title="Sign Out">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+
+    <!-- Severe Weather Broadcast Alert Banner (Populated via LocalStorage / Admin) -->
+    <div id="activeAlertBanner" class="alert-banner" style="display: none;">
+      <div class="alert-content">
+        <i class="fas fa-bullhorn alert-icon"></i>
+        <div class="alert-text" id="alertBannerText">
+          <strong>URGENT WEATHER ADVISORY</strong>
+          <span>Monitoring active meteorological conditions.</span>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-secondary" onclick="document.getElementById('activeAlertBanner').style.display='none'">Dismiss</button>
+    </div>
+
+    <!-- Search & Quick Selection Section (Flexbox) -->
+    <section class="search-section">
+      <form class="search-bar-wrapper" onsubmit="event.preventDefault(); fetchWeather(document.getElementById('citySearchInput').value);">
+        <i class="fas fa-search" style="color: var(--accent-cyan); font-size: 1.1rem;"></i>
+        <input 
+          type="text" 
+          id="citySearchInput" 
+          class="search-input" 
+          placeholder="Search any city or region (e.g., Hyderabad, Bengaluru, London, Tokyo)..."
+          autocomplete="off"
+        >
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="fas fa-arrow-right"></i> Search
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="useCurrentLocation()" title="Use Current GPS Location">
+          <i class="fas fa-location-arrow"></i> Locate Me
+        </button>
+      </form>
+
+      <!-- Quick City Filters (Flexbox) -->
+      <div class="quick-cities">
+        <span class="quick-label"><i class="fas fa-bolt"></i> Quick Switch:</span>
+        <button class="city-pill" onclick="fetchWeather('Hyderabad')">Hyderabad</button>
+        <button class="city-pill" onclick="fetchWeather('Bengaluru')">Bengaluru</button>
+        <button class="city-pill" onclick="fetchWeather('Mumbai')">Mumbai</button>
+        <button class="city-pill" onclick="fetchWeather('Delhi')">Delhi</button>
+        <button class="city-pill" onclick="fetchWeather('London')">London</button>
+        <button class="city-pill" onclick="fetchWeather('Tokyo')">Tokyo</button>
+        <button class="city-pill" onclick="fetchWeather('New York')">New York</button>
+      </div>
+    </section>
+
+    <!-- Main Dashboard Grid Layout (CSS Grid) -->
+    <div class="dashboard-grid">
+
+      <!-- Left Column: Primary Meteorological Info & Personal Recommendations -->
+      <div class="main-column">
+
+        <!-- Weather Hero Card -->
+        <div class="card weather-hero">
+          <div class="hero-header">
+            <div class="city-title-group">
+              <h2 id="cityName">Loading Location...</h2>
+              <p><i class="fas fa-satellite"></i> Telemetry Synced &bull; Real-time Feed</p>
+            </div>
+            <button id="favBtn" class="fav-btn" onclick="toggleCurrentFavorite()" title="Add to Favorites">
+              <i class="far fa-star"></i>
+            </button>
+          </div>
+
+          <div class="hero-body">
+            <div class="temp-display">
+              <span id="currentTemp" class="current-temp">--</span>
+              <span id="tempUnit" class="temp-unit">°C</span>
+            </div>
+            <div class="condition-display">
+              <i id="conditionIcon" class="fas fa-sun condition-icon-large" style="color: #f59e0b;"></i>
+              <span id="conditionText" class="condition-text">Clear Sky</span>
+              <span id="feelsLikeText" class="feels-like">Feels like --°C</span>
+            </div>
+          </div>
+
+          <div class="hero-footer">
+            <span><i class="fas fa-clock"></i> Updated just now</span>
+            <span><i class="fas fa-chart-line"></i> Dynamic Predictive Model</span>
+          </div>
+        </div>
+
+        <!-- Personalized Recommendations & Weather-Based Tips (CSS Grid) -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-user-check" style="color: var(--accent-cyan);"></i> Personalized Recommendations & Tips
+              <span class="badge">AI Guidance</span>
+            </h3>
+          </div>
+
+          <div class="recommendations-grid">
+            <!-- Clothing Card -->
+            <div class="recom-card">
+              <div class="recom-icon clothing">
+                <i class="fas fa-tshirt"></i>
+              </div>
+              <div class="recom-details">
+                <h4>What to Wear</h4>
+                <p id="recomClothing">Analyzing climate profile...</p>
+              </div>
+            </div>
+
+            <!-- Activity Score -->
+            <div class="recom-card">
+              <div class="recom-icon activity">
+                <i class="fas fa-running"></i>
+              </div>
+              <div class="recom-details">
+                <h4>Outdoor & Sports</h4>
+                <p id="recomActivity">Calculating comfort index...</p>
+              </div>
+            </div>
+
+            <!-- Umbrella Advisory -->
+            <div class="recom-card">
+              <div class="recom-icon umbrella">
+                <i class="fas fa-umbrella"></i>
+              </div>
+              <div class="recom-details">
+                <h4>Precipitation Alert</h4>
+                <p id="recomUmbrella">Checking rain radars...</p>
+              </div>
+            </div>
+
+            <!-- UV & Health Advice -->
+            <div class="recom-card">
+              <div class="recom-icon health">
+                <i class="fas fa-heartbeat"></i>
+              </div>
+              <div class="recom-details">
+                <h4>UV & Health Tips</h4>
+                <p id="recomHealth">Evaluating solar radiation...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 24-Hour Hourly Timeline (Flexbox) -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-hourglass-half" style="color: var(--accent-indigo);"></i> 24-Hour Hourly Forecast
+            </h3>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">Scroll horizontally &rarr;</span>
+          </div>
+          <div class="hourly-strip" id="hourlyContainer">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+
+        <!-- Core Meteorological Metrics (CSS Grid) -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-tachometer-alt" style="color: var(--color-info);"></i> Atmosphere & Telemetry Metrics
+            </h3>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item">
+              <div class="metric-header">
+                <span>Humidity</span>
+                <i class="fas fa-tint"></i>
+              </div>
+              <div class="metric-value" id="metricHumidity">--%</div>
+              <div class="metric-sub">Relative moisture content</div>
+            </div>
+
+            <div class="metric-item">
+              <div class="metric-header">
+                <span>Wind Speed</span>
+                <i class="fas fa-wind"></i>
+              </div>
+              <div class="metric-value" id="metricWind">-- km/h</div>
+              <div class="metric-sub">Surface level 10m velocity</div>
+            </div>
+
+            <div class="metric-item">
+              <div class="metric-header">
+                <span>UV Index</span>
+                <i class="fas fa-sun"></i>
+              </div>
+              <div class="metric-value" id="metricUV">-- / 11</div>
+              <div class="metric-sub">Solar radiation intensity</div>
+            </div>
+
+            <div class="metric-item">
+              <div class="metric-header">
+                <span>Air Pressure</span>
+                <i class="fas fa-compress-arrows-alt"></i>
+              </div>
+              <div class="metric-value" id="metricPressure">-- hPa</div>
+              <div class="metric-sub">Barometric pressure</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Map Visualizer, 5-Day Forecast & Saved Locations -->
+      <div class="side-column">
+
+        <!-- Interactive Map Visuals (Leaflet.js) -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-map-marked-alt" style="color: var(--accent-cyan);"></i> Map Radar Visuals
+            </h3>
+            <span class="badge">Leaflet GIS</span>
+          </div>
+          <div id="mapContainer"></div>
+          <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.75rem;">
+            <i class="fas fa-info-circle"></i> Live geographical coordinate centering with meteorological status overlay.
+          </p>
+        </div>
+
+        <!-- 5-Day Forecast List (Flexbox) -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-calendar-alt" style="color: var(--accent-blue);"></i> 5-Day Outlook
+            </h3>
+          </div>
+          <div class="forecast-list" id="forecastContainer">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+
+        <!-- Saved Favorite Cities -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-star" style="color: #f59e0b;"></i> Saved Locations
+            </h3>
+          </div>
+          <div class="favorites-list" id="favoritesList">
+            <!-- Populated via LocalStorage -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>WeatherSphere User Module &bull; SDC Project Review 1 &bull; HTML, CSS Grid/Flexbox & JavaScript</p>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Unified Application Script -->
+  <script src="script.js"></script>
+</body>
+</html>

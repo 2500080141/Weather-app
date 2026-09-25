@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeatherSphere - Authentication & Portal</title>
+  <link rel="stylesheet" href="weather.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Top Flexbox Navbar -->
+  <header class="navbar">
+    <a href="index.html" class="nav-brand">
+      <div class="brand-icon">
+        <i class="fas fa-cloud-sun-rain"></i>
+      </div>
+      <span>WeatherSphere</span>
+      <span class="brand-tag">SDC Review 1</span>
+    </a>
+    <div class="nav-actions">
+      <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="fas fa-shield-alt"></i> LocalStorage Auth</span>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+    <div class="auth-wrapper">
+      <div class="auth-card">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <h2 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem;">Welcome to WeatherSphere</h2>
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Smart real-time climate telemetry, personal guidance, and administrative controls.</p>
+        </div>
+
+        <!-- Auth Tabs (Flexbox) -->
+        <div class="auth-tabs">
+          <button id="loginTabBtn" class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+          <button id="registerTabBtn" class="auth-tab" onclick="switchAuthTab('register')">Create Account</button>
+        </div>
+
+        <!-- Sign In Form -->
+        <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label class="form-label" for="loginEmail"><i class="fas fa-envelope"></i> Email Address</label>
+            <input type="email" id="loginEmail" class="form-control" placeholder="name@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="loginPassword"><i class="fas fa-lock"></i> Password</label>
+            <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%;">
+            <i class="fas fa-sign-in-alt"></i> Sign In to Module
+          </button>
+        </form>
+
+        <!-- Register Form (Hidden by default) -->
+        <form id="registerForm" class="auth-form" style="display: none;" onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label class="form-label" for="regName"><i class="fas fa-user"></i> Full Name</label>
+            <input type="text" id="regName" class="form-control" placeholder="Naga Santhosh" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regEmail"><i class="fas fa-envelope"></i> Email Address</label>
+            <input type="email" id="regEmail" class="form-control" placeholder="user@domain.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regPassword"><i class="fas fa-lock"></i> Choose Password</label>
+            <input type="password" id="regPassword" class="form-control" placeholder="At least 6 characters" minlength="4" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regRole"><i class="fas fa-user-tag"></i> Select Module Role</label>
+            <select id="regRole" class="form-control" style="cursor: pointer;">
+              <option value="user">User Module (Weather Explorer)</option>
+              <option value="admin">Admin Module (System Controller)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%;">
+            <i class="fas fa-user-plus"></i> Register & Enter
+          </button>
+        </form>
+
+        <!-- Demo Credentials Fill Box -->
+        <div class="demo-credentials-box">
+          <strong><i class="fas fa-key"></i> Quick Review Demo Credentials:</strong>
+          <span>Click either button to autofill credentials for instant review testing:</span>
+          <div class="demo-btn-group">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="quickFill('admin')">
+              <i class="fas fa-user-shield"></i> Admin Demo
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="quickFill('user')">
+              <i class="fas fa-user"></i> User Demo
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Review 1 Architecture Showcase Section (Grid) -->
+    <section style="margin-top: 2rem;">
+      <h3 style="text-align: center; margin-bottom: 1.5rem; font-size: 1.25rem;">
+        <i class="fas fa-layer-group" style="color: var(--accent-cyan);"></i> SDC Project Architecture & Module Mapping
+      </h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+        
+        <div class="card">
+          <div class="card-title">
+            <i class="fas fa-cloud-sun" style="color: var(--accent-cyan);"></i> User Module
+            <span class="badge">Active</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+            Real-time live weather feeds, 5-day & 24-hr hourly forecast curves, interactive map preview, saved locations, and customized clothing/activity tips.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <i class="fas fa-sliders-h" style="color: var(--color-danger);"></i> Admin Module
+            <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171;">Privileged</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+            Platform telemetry analytics, user management table, severe weather broadcast publisher, and weather anomaly simulations.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <i class="fas fa-database" style="color: var(--color-success);"></i> Local Storage Engine
+            <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">Client-Side</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+            Pure client-side persistence for user credentials, roles, session tokens, published severe warnings, and favorite cities.
+          </p>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>WeatherSphere &copy; 2026 SDC Project Review 1 &bull; Built with pure HTML5, CSS Grid/Flexbox & JavaScript</p>
+  </footer>
+
+  <!-- Unified Application Script -->
+  <script src="script.js"></script>
+</body>
+</html>
